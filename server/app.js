@@ -7,7 +7,22 @@ const cors = require('cors');
 require('dotenv').config();
 
 // Middleware
-app.use(cors());
+
+const allowedOrigins = [
+  "http://localhost:3000", // local frontend
+  "https://doctor-appointment-system-frontend-tau.vercel.app" 
+];
+app.use(cors({
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // allow Postman or curl requests
+    if(allowedOrigins.indexOf(origin) === -1){
+      const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 const employeeRoutes = require('./routes/employeeRoutes');
@@ -22,7 +37,7 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => {
   console.log('✅ MongoDB connected');
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  app.listen(PORT,'0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
 })
 .catch((err) => {
   console.error('❌ Failed to connect to MongoDB:', err);
